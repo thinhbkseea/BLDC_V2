@@ -8,10 +8,10 @@
 
 // USER DEFINES
 #define ALGO_ID                     1       // 1 Indicates sensorless , 0 indicates sensored algorithms
-#define ALIGN_OR_IPD                1       //  0 indicates Six pulse method , 1 indicates rotor align
+#define ALIGN_OR_IPD                0       //  0 indicates Six pulse method , 1 indicates rotor align
 //ISC User Parameters
-#define ISC_MIN_BEMF                150     // Minimum BEMF below which programs skips to IPD after brake time set by ISC BRAKE TIME in ms to disscipate the residual BEMF( 1.4v *4096)/57.5 = 100
-#define ISC_BRAKE_TIME              60      // [this number+1]*1ms = brake time appled once BEMF of motor is less than ISC_MIN_BEMF, if motor is spinning  during start up
+#define ISC_MIN_BEMF                100//150     // Minimum BEMF below which programs skips to IPD after brake time set by ISC BRAKE TIME in ms to disscipate the residual BEMF( 1.4v *4096)/57.5 = 100
+#define ISC_BRAKE_TIME              40//60      // [this number+1]*1ms = brake time appled once BEMF of motor is less than ISC_MIN_BEMF, if motor is spinning  during start up
 //IPD User Parameters
 #define IPD_ADD_BRAKE               30      // the (IPDRiseTime/512)+this number  IPDRiseTime is measured using timerA at 12.5MHz so 400us = 5000
 #define IPD_PULSE_TIME              3000        // set no of clock cycles (1 clock cycles = 40nS) a voltage pulse is applied on a phase for Initial Position detection by Six pulse method
@@ -24,19 +24,19 @@
 //Open Loop Acceleration User Parameters
 #define ACCEL_RATE                  40      // {Hz/s}
 #define ACCEL_STOP                  50000   // {mHz}
-#define ACCEL_VELOCITY_INIT         10000   // {mHz}
+#define ACCEL_VELOCITY_INIT         20000   // {mHz}
 
 //Closed Loop User Parameters
 #define BEMF_THRESHOLD              1700//1960    // BEMF Integration threshold according to calculations of BEMF waveform
-#define RAMP_RATE_DELAY             100     // This number controls the acceleration,  duty cycle is updated after ( RAMP_RATE_DELAY * 1000) clock cycles
-#define RAMP_RATE                   1       // This is the change in dutycycle (increment/decrement) for every update
+#define RAMP_RATE_DELAY             20     // This number controls the acceleration,  duty cycle is updated after ( RAMP_RATE_DELAY * 1000) clock cycles
+#define RAMP_RATE                   2       // This is the change in dutycycle (increment/decrement) for every update
 #define COMMUTATION_BLANK_TIME      5       // How many PWM cycles to blank before sampling the BEMF
 #define PWM_BLANK_COUNTS            20//5       // How many Clock cycles before the center of PWM  the BEMF is sampled
 
 #define MAX_DUTY_CYCLE              1000        // relative to PWM_PERIOD
-#define MIN_OFF_DUTY                250         // relative to PWM_PERIOD
-#define MIN_ON_DUTY                 260         // relative to PWM_PERIOD
-#define START_UP_DUTY_CYCLE         330         // relative to PWM_PERIOD
+#define MIN_OFF_DUTY                0//250         // relative to PWM_PERIOD
+#define MIN_ON_DUTY                 10//260         // relative to PWM_PERIOD
+#define START_UP_DUTY_CYCLE         100//330         // relative to PWM_PERIOD
 #define PWM_FACTOR                  0           //  ADC 12 bit to PWM width ratio , by default 0 represents 12 bit scaling
 
 /* Fault handling setup */                      /*ADC Max ref voltage is 3.3v ,  VCC is scaled by 0.0573 internally (5/88 Ohms bridge) so that VCC ref input to ADC never cross 3.3v The maximum supply voltage is 57.5v.*/

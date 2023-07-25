@@ -24,6 +24,9 @@ _Bool up_speed_mode=0;
 unsigned int t_com=0;
 _Bool start_motor = 0;
 unsigned int start_stop_delay = 0;
+unsigned int start_tmp = 0;
+unsigned int port_delay = 0;
+unsigned int pulse_delay = 0;
 
 // Registers
 extern FLT_STAT_REG0_Obj Fault_Status_Reg;
@@ -86,124 +89,153 @@ __interrupt void TIMER2_B1_ISR(void)
 __interrupt void TIMER1_B0_ISR(void)
 {
     uint16_t interruptValue = TB1IV;
-//    switch (press_count)
-//    {
-//    case 0:
-//    {
-//        if (up_speed_mode == 1)
-//        {
-//            delay_count++;
-//            if (delay_count >= 1000)
-//            {
-//                up_speed_mode = 0;
-//            }
-//        }
-//    }
-//        break;
-//    case 1:
-//    {
-//        stop_time_count = 0;
-//        time_count++;
-//        if (time_count >= 40000) //40ns*40000
-//        {
-//            if (signal_start == 1)
-//            {
-//                //reduce speed
-//                SensorlessTrapController.SetSpeed -= 100;
-//                if (SensorlessTrapController.SetSpeed <= 300)
-//                {
-//                    SensorlessTrapController.SetSpeed = 300;
-//                }
-//            }
-//
-//            time_count = 0;
-//            press_count = 0;
-//
-//        }
-//        P4OUT |= BIT6;
-//        P4OUT &= BIT7;
-//    }
-//        break;
-//    case 2:
-//    {
-//        stop_time_count = 0;
-//        if (signal_start == 0)
-//        {
-//            signal_start = 1;
-//            //start
-//            SensorlessTrapController.SetSpeed = START_UP_DUTY_CYCLE;
-//            HostController.EnabledGateDrivers = 0x01;
-//            HostController.Start_Stop_Motor = 0x00;
-//        }
-//        else
-//        {
-//            //up speed
-//            SensorlessTrapController.SetSpeed += 100;
-//            if (SensorlessTrapController.SetSpeed
-//                    >= SensorlessTrapController.MaxDutyCycle)
-//            {
-//                SensorlessTrapController.SetSpeed =
-//                        SensorlessTrapController.MaxDutyCycle;
-//            }
-//        }
-//        press_count = 0;
-//        time_count = 0;
-//        up_speed_mode = 1;
-//        delay_count = 0;
-//        P4OUT |= BIT6 | BIT7;
-//    }
-//        break;
-//    default:
-//    {
-//        press_count = 0;
-//        time_count = 0;
-//    }
-//        break;
-//    }
-
-    if(press_on_off==1)
+    P4OUT |= BIT7;
+    if ((port_delay == 1) && (press_count < 3))
     {
-        press_time++;
-        if(press_time>=10000)
+
+        pulse_delay++;
+        if (pulse_delay >= 500)
         {
-            on_off_state ^= 1;
-            if (on_off_state == 1)
+            if ((P2IN & BIT1) == 1)
             {
-                //P1OUT |= BIT6;
-                HostController.EnabledGateDrivers = 0x01;   //enable gate driver
-                //HostController.Start_Stop_Motor = 0x00; //start motor
-                start_motor = 0x01;
+                press_count++;
+                port_delay = 0;
             }
             else
             {
-                HostController.Start_Stop_Motor = 0x01;
-                HostController.EnabledGateDrivers = 0x00;
-
-                P2OUT &= ~BIT0;
-
+                pulse_delay = 0;
+                port_delay = 0;
             }
-            press_time=0;
-            press_on_off=0;
         }
 
-
     }
-    if(start_motor==1)
+    switch (press_count)
     {
-        start_stop_delay++;
-        if(start_stop_delay>=40000)
+    case 0:
+    {
+        if (up_speed_mode == 1)
         {
-            HostController.Start_Stop_Motor = 0x00; //start motor
-            start_motor=0;
-            start_stop_delay=0;
+            delay_count++;
+            if (delay_count >= 24000)
+            {
+                up_speed_mode = 0;
+            }
         }
     }
+        break;
+    case 1:
+    {
+        stop_time_count = 0;
+        time_count++;
+        if (time_count >= 24000) //40ns*40000
+        {
+            if (signal_start == 1)
+            {
+                //reduce speed
+
+                SensorlessTrapController.SetSpeed -= 100;
+                if (SensorlessTrapController.SetSpeed <= 300)
+                {
+                    SensorlessTrapController.SetSpeed = 300;
+                }
+            }
+
+            time_count = 0;
+            press_count = 0;
+
+        }
+        P4OUT |= BIT6;
+        P4OUT &= BIT7;
+    }
+        break;
+    case 2:
+    {
+        stop_time_count = 0;
+        if (up_speed_mode == 1) //dang trong che do tang toc, doi cho tang toc xong roi tang tiep
+        {
+            delay_count++;
+            if (delay_count >= 24000) //10000
+            {
+                up_speed_mode = 0;
+            }
+        }
+        if (signal_start == 0)
+        {
+            signal_start = 1;
+            //start
+            SensorlessTrapController.SetSpeed = 500;
+            HostController.EnabledGateDrivers = 0x01;
+            HostController.Start_Stop_Motor = 0x00;
+        }
+        else
+        {
+            //up speed
+            SensorlessTrapController.SetSpeed += 100;
+            if (SensorlessTrapController.SetSpeed
+                    >= SensorlessTrapController.MaxDutyCycle)
+            {
+                SensorlessTrapController.SetSpeed =
+                        SensorlessTrapController.MaxDutyCycle;
+            }
+        }
+        press_count = 0;
+        time_count = 0;
+        up_speed_mode = 1;
+        delay_count = 0;
+        P4OUT |= BIT6 | BIT7;
+    }
+        break;
+    default:
+    {
+        press_count = 0;
+        time_count = 0;
+    }
+        break;
+    }
+
+//    if(press_on_off==1)
+//    {
+//        press_time++;
+//        if(press_time>=10000)
+//        {
+//            on_off_state ^= 1;
+//            if (on_off_state == 1)
+//            {
+//                //P1OUT |= BIT6;
+//                HostController.EnabledGateDrivers = 0x01;   //enable gate driver
+//                //HostController.Start_Stop_Motor = 0x00; //start motor
+//                start_motor = 0x01;
+//            }
+//            else
+//            {
+//                HostController.Start_Stop_Motor = 0x01;
+//                HostController.EnabledGateDrivers = 0x00;
+//
+//                P2OUT &= ~BIT0;
+//
+//            }
+//            press_time=0;
+//            press_on_off=0;
+//        }
+//
+//
+//    }
+//    if(start_motor==1)
+//    {
+//        start_stop_delay++;
+//        if(start_stop_delay>=40000)
+//        {
+//            HostController.Start_Stop_Motor = 0x00; //start motor
+//            start_motor=0;
+//            start_stop_delay=0;
+//        }
+//    }
 
   //  if (stop_count >= 1)
-    if((P2IN&BIT1)==0)
+    if(((P2IN&BIT1)==0)||((P2IN&BIT2)==1))
     {
         stop_time_count++;
-        if (stop_time_count >= 40000)
+        if (stop_time_count >= 24000)
         {
             signal_start = 0;
             HostController.EnabledGateDrivers = 0x00;
@@ -308,10 +340,10 @@ __interrupt void TIMER3_B0_ISR(void)
     switch(ApplicationStatus.currentstate)
     {
     case MOTOR_ALIGN:
-        ReadStartCurrent();
+
         if(SensorlessTrapController.StartAlign == FALSE)
         {
-            if((SensorlessTrapController.CurrentDutyCycle < SensorlessTrapController.StartupDutyCycle)&&(SensorlessTrapController.StartCurrent<SensorlessTrapController.StartCurrentLimit))
+            if(SensorlessTrapController.CurrentDutyCycle < SensorlessTrapController.StartupDutyCycle)
             {             //continue to increase the duty cycle to the specified value
                 SensorlessTrapController.CurrentDutyCycle++;
                 SetPWMDutyCycle(SensorlessTrapController.CurrentDutyCycle);
@@ -407,18 +439,7 @@ __interrupt void TIMER3_B0_ISR(void)
         break;
 
     case MOTOR_START:
-//        ReadStartCurrent();
-        if(SensorlessTrapController.StartOpenLoop==0)
-        {
-            if(SensorlessTrapController.CurrentDutyCycle < SensorlessTrapController.StartupDutyCycle)
-            {
-                SensorlessTrapController.CurrentDutyCycle++;
-                SetPWMDutyCycle(SensorlessTrapController.CurrentDutyCycle);
-            }
-            else SensorlessTrapController.StartOpenLoop = 1;
-        }
-        else
-        {
+
         SensorlessTrapController.AccelCounter++;
         if((SensorlessTrapController.AccelCounter >= COUNTER_1_MSECOND)&&
            (SensorlessTrapController.AccelDone == FALSE))//&&(SensorlessTrapController.StartCurrent<SensorlessTrapController.StartCurrentLimit))                                                                             //1ms
@@ -429,6 +450,18 @@ __interrupt void TIMER3_B0_ISR(void)
             SensorlessTrapController.AccelDistance +=
                 (SensorlessTrapController.AccelVelocityInit - (SensorlessTrapController.AccelRate >> 1)) >>
                 3;                                                                                                                       //calculate distance
+
+            if (SensorlessTrapController.CurrentDutyCycle < 350)
+            {
+                start_tmp++;
+                if (start_tmp == 2)
+                {
+                    SensorlessTrapController.CurrentDutyCycle++;
+                    start_tmp = 0;
+                }
+
+            }
+
             if(SensorlessTrapController.AccelDistance > ACCEL_60_DEGREES)
             {                     //if distance is 60 degrees commutate
                 SensorlessTrapController.AccelDistance = 0;
@@ -446,7 +479,7 @@ __interrupt void TIMER3_B0_ISR(void)
                 }
             }
         }
-        }
+
         break;
 
     case MOTOR_RUN:
@@ -465,8 +498,8 @@ __interrupt void PORT2_ISR(void)
 {
     //dtbui
 
-//    if(P2IFG & BIT2)        //NO
-//       {
+    if (P2IFG & BIT2)        //NO
+       {
 //           if(press_count==0)
 //           {
 //
@@ -490,20 +523,21 @@ __interrupt void PORT2_ISR(void)
 //               }
 //               else press_count=1;
 //           }
-//           P2IFG &= ~BIT2;
-//       }
+        port_delay = 1;
+        P2IFG &= ~BIT2;
+    }
 //    if (P2IFG & BIT1)         //NC
 //    {
 //        //stop_count++;
 //        P2IFG &= ~BIT1;
 //    }
-    if (P2IFG & BIT3)           //start stop with POT input
-    {
+//    if (P2IFG & BIT3)           //start stop with POT input
+//    {
 
-        if(press_on_off==0)
-        {
-           press_on_off=1;
-        }
+//        if(press_on_off==0)
+//        {
+//           press_on_off=1;
+//        }
 
 //        press_on_off ^= 1;
 //
@@ -521,8 +555,8 @@ __interrupt void PORT2_ISR(void)
 //            P2OUT &= ~BIT0;
 //
 //        }
-        P2IFG &= ~BIT3;
-    }
+//        P2IFG &= ~BIT3;
+//    }
 }
 
 // Timer0_A1 interrupt service routine

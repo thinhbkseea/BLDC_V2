@@ -313,14 +313,14 @@ void GPIO_Init(void)
     P2REN |= BIT1 | BIT2; // When a GPIO pin is configured as Input, Enable resistance to the pin by setting Px.REN and PX.OUT
     P2OUT |= BIT1 | BIT2;
     P2IE = 0x00;
-//    P2IE |=  BIT1 | BIT2;
-//    P2IES |= BIT1 | BIT2;
+    P2IE |=  BIT2;// | BIT2;
+    P2IES |= BIT2;// | BIT2;
 // Configure port 2.3 as input for POT
     P2DIR &= ~BIT3;
     P2REN |= BIT3; // When a GPIO pin is configured as Input, Enable resistance to the pin by setting Px.REN and PX.OUT
     P2OUT |= BIT3;
-    P2IE |=  BIT3;
-    P2IES |= BIT3;
+//    P2IE |=  BIT3;
+//    P2IES |= BIT3;
 
 /* Configure Port 4.1 as input for sensing faults and enable Interrupt */
     P4DIR &= ~BIT1;

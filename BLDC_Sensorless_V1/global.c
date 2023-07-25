@@ -59,6 +59,16 @@ extern OCP_CTRL_REG5_Obj OCP_Control_Reg;
 extern CSA_CTRL_REG6_Obj CSA_Control_Reg;
 extern REG_MAP_Obj Reg_Map_Cache;
 
+unsigned int count_i = 0;
+unsigned int sum_current = 0;
+unsigned int i_current = 0;
+
+unsigned int count_j = 0;
+unsigned int sum_vol = 0;
+unsigned int vol_array[8];
+unsigned int vol_pre = 0;
+unsigned int count_m = 0;
+
 void EnableGateDrivers()
 {
     /* Gate Drive Enable using Port 1.6 */
@@ -914,17 +924,7 @@ void ReadVCC()
     //ADCCTL0 = ~ADCSC;
 
     SensorlessTrapController.VCCvoltage = ADCMEM0 & 0x0FFF;       /* Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC*/
-//    if(ADCMEM0>1700)
-//     {
-//         P4OUT |= BIT7;
-//         P5OUT &= ~BIT1;
-//     }
-//
-//     else
-//     {
-//         P5OUT |= BIT1;
-//         P4OUT &= ~BIT7;
-//     }
+
     SensorlessTrapController.VCCvoltage >>= PWM_FACTOR;                         /*12 bit ADC result has to be scaled to 10 bit value */
 
     SensorlessTrapController.CTvoltage = 1300;//620;//460;
@@ -949,25 +949,25 @@ void SetMotorSpeed(void)
     //SensorlessTrapController.TargetDutyCycle = SensorlessTrapController.SetMotorSpeed;   // Update the Duty cycle with Motor speed set from the MDBU serial   //dtbui
     //read speed from pot //dtbui
 
-    ADCMCTL0 = ADCINCH_8;         //   channel = A6 (Read the pot)
-    ADCCTL0 |= ADCENC;                                 // Enable Conversions
-    ADCCTL0 |= ADCSC;                          // Start sampling of channels
-    while (ADCCTL1 & ADCBUSY_L)
-    {
-    };
-
-    ADCCTL0 &= ~ADCENC;                          // End sampling of channels
-    ADCCTL0 &= ~ADCSC;                                // Disable conversions
-
-    SensorlessTrapController.TargetDutyCycle = ADCMEM0 & 0x0FFF; // Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC
-    SensorlessTrapController.TargetDutyCycle >>= PWM_FACTOR; //2;PWM_FACTOR;                         //12 bit ADC result has to be scaled to 10 bit value
+//    ADCMCTL0 = ADCINCH_8;         //   channel = A6 (Read the pot)
+//    ADCCTL0 |= ADCENC;                                 // Enable Conversions
+//    ADCCTL0 |= ADCSC;                          // Start sampling of channels
+//    while (ADCCTL1 & ADCBUSY_L)
+//    {
+//    };
+//
+//    ADCCTL0 &= ~ADCENC;                          // End sampling of channels
+//    ADCCTL0 &= ~ADCSC;                                // Disable conversions
+//
+//    SensorlessTrapController.TargetDutyCycle = ADCMEM0 & 0x0FFF; // Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC
+//    SensorlessTrapController.TargetDutyCycle >>= PWM_FACTOR; //2;PWM_FACTOR;                         //12 bit ADC result has to be scaled to 10 bit value
 
 
 
 
     //set start speed
 
-//    SensorlessTrapController.TargetDutyCycle = 500;// SensorlessTrapController.SetSpeed;
+    SensorlessTrapController.TargetDutyCycle = SensorlessTrapController.SetSpeed;
     //
     if(SensorlessTrapController.TargetDutyCycle >= SensorlessTrapController.MaxDutyCycle)
     {
@@ -1004,17 +1004,28 @@ void ReadCurrentShunt()
     }
     ;
     SensorlessTrapController.MotorPhaseCurrent = ADCMEM0 & 0x0FFF;       /* Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC*/
+//    i_current = ADCMEM0 & 0x0FFF;
 
     ADCCTL0 &= ~ADCENC;                                                     // End sampling of channels
     ADCCTL0 &= ~ADCSC;
 
-    if(SensorlessTrapController.DeviceID & BIT1)    // If Current sense is in phase shunt remove the offset.
+    if(SensorlessTrapController.DeviceID & BIT2)    // If Current sense is in phase shunt remove the offset.
     {
-
+//        i_current -= 2048;
         SensorlessTrapController.MotorPhaseCurrent -= 2048;     // subtracting the bias, Vref/2 is added as bias voltage to support bidirectional current sensing
     }
+
     SensorlessTrapController.MotorPhaseCurrent = abs(
     SensorlessTrapController.MotorPhaseCurrent);
+//    i_current = abs (i_current);
+//    sum_current += i_current;
+//    count_i++;
+//    if (count_i == 16)
+//    {
+//        SensorlessTrapController.MotorPhaseCurrent = sum_current >> 4;
+//        sum_current = 0;
+//        count_i = 0;
+//    }
     if(SensorlessTrapController.MotorPhaseCurrent >
        SensorlessTrapController.MotorPhaseCurrentLimit)                                                   /* Motor Phase Current Limit*/
     {
@@ -1025,24 +1036,7 @@ void ReadCurrentShunt()
     }
 }
 
-void ReadStartCurrent()
-{
-    ADCMCTL0 = ADCINCH_4; //   channel = A4 (Read the CSA reading from Phase A for over current protection) , End of Sequence
-    ADCCTL0 |= ADCENC | ADCSC;                     // Start sampling of channels
-    while (ADCCTL1 & ADCBUSY_L)
-    {
-    };
-    SensorlessTrapController.StartCurrent = ADCMEM0 & 0x0FFF; /* Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC*/
 
-    ADCCTL0 &= ~ADCENC;                              // End sampling of channels
-    ADCCTL0 &= ~ADCSC;
-
-    if (SensorlessTrapController.DeviceID & BIT1) // If Current sense is in phase shunt remove the offset.
-    {
-        SensorlessTrapController.StartCurrent -= 2048; // subtracting the bias, Vref/2 is added as bias voltage to support bidirectional current sensing
-    }
-    SensorlessTrapController.StartCurrent = abs(SensorlessTrapController.StartCurrent);
-}
 /*function
  * ISCReadPhaseVoltage()
  * Triggers ADC and samples 3 phase voltages and evaluates if motor is already spinning

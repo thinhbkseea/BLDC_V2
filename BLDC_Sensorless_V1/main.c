@@ -154,8 +154,8 @@ void DRV8x_State_Machine(void)
     case MOTOR_ALIGN:
         if(SensorlessTrapController.AlignComplete == TRUE)                                                              // wait for the align routine to finish
         {
-//            SensorlessTrapController.CurrentDutyCycle = SensorlessTrapController.StartupDutyCycle;
-            SensorlessTrapController.CurrentDutyCycle = 10;
+            SensorlessTrapController.CurrentDutyCycle = SensorlessTrapController.StartupDutyCycle;
+//            SensorlessTrapController.CurrentDutyCycle = 10;
             SensorlessTrapController.CurrentCommState = SensorlessTrapController.AlignSector;
             UpdateNextCommutation();                                                                                                            // update the commutation sequence to ~90 degrees from the rotor
             UpdateNextCommutation();
@@ -338,13 +338,13 @@ void DRV8x_State_Machine(void)
                                         !SensorlessTrapController.Direction;                                                              // This flag monitors for change in direction, If direction change is applied multiple times in quick succession before speed becoming zero, this flag determines the true direction by the time motor is ramped up.                      __delay_cycles(25000000);                              // A delay of 1s is applied before changing the direction of spin
                         if(SensorlessTrapController.Direction == TRUE)
                         {
-//                            P4OUT |= BIT5;                                                         // Turn  on LED1
-                            P4OUT &= ~BIT6;                                                                                 // Turn off LED 2
+                            P4OUT |= BIT5;                                                         // Turn  on LED1
+//                            P4OUT &= ~BIT6;                                                                                 // Turn off LED 2
                         }
                         else
                         {
-//                            P4OUT &= ~BIT5;                                                        // Turn  off LED1
-                            P4OUT |= BIT6;                                                                                  // Turn on LED 2
+                            P4OUT &= ~BIT5;                                                        // Turn  off LED1
+//                            P4OUT |= BIT6;                                                                                  // Turn on LED 2
 
                         }
                         ApplicationStatus.previousstate = ApplicationStatus.currentstate;
