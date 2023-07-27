@@ -1003,29 +1003,29 @@ void ReadCurrentShunt()
     {
     }
     ;
-    SensorlessTrapController.MotorPhaseCurrent = ADCMEM0 & 0x0FFF;       /* Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC*/
-//    i_current = ADCMEM0 & 0x0FFF;
+//    SensorlessTrapController.MotorPhaseCurrent = ADCMEM0 & 0x0FFF;       /* Filter the result and read only last 12 bits because MSP430F5529 has 12bit ADC*/
+    i_current = ADCMEM0 & 0x0FFF;
 
     ADCCTL0 &= ~ADCENC;                                                     // End sampling of channels
     ADCCTL0 &= ~ADCSC;
 
     if(SensorlessTrapController.DeviceID & BIT2)    // If Current sense is in phase shunt remove the offset.
     {
-//        i_current -= 2048;
-        SensorlessTrapController.MotorPhaseCurrent -= 2048;     // subtracting the bias, Vref/2 is added as bias voltage to support bidirectional current sensing
+        i_current -= 2048;
+//        SensorlessTrapController.MotorPhaseCurrent -= 2048;     // subtracting the bias, Vref/2 is added as bias voltage to support bidirectional current sensing
     }
 
-    SensorlessTrapController.MotorPhaseCurrent = abs(
-    SensorlessTrapController.MotorPhaseCurrent);
-//    i_current = abs (i_current);
-//    sum_current += i_current;
-//    count_i++;
-//    if (count_i == 16)
-//    {
-//        SensorlessTrapController.MotorPhaseCurrent = sum_current >> 4;
-//        sum_current = 0;
-//        count_i = 0;
-//    }
+//    SensorlessTrapController.MotorPhaseCurrent = abs(
+//    SensorlessTrapController.MotorPhaseCurrent);
+    i_current = abs (i_current);
+    sum_current += i_current;
+    count_i++;
+    if (count_i == 16)
+    {
+        SensorlessTrapController.MotorPhaseCurrent = sum_current >> 4;
+        sum_current = 0;
+        count_i = 0;
+    }
     if(SensorlessTrapController.MotorPhaseCurrent >
        SensorlessTrapController.MotorPhaseCurrentLimit)                                                   /* Motor Phase Current Limit*/
     {

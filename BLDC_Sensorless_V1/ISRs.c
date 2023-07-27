@@ -89,14 +89,14 @@ __interrupt void TIMER2_B1_ISR(void)
 __interrupt void TIMER1_B0_ISR(void)
 {
     uint16_t interruptValue = TB1IV;
-    P4OUT |= BIT7;
+
     if ((port_delay == 1) && (press_count < 3))
     {
 
         pulse_delay++;
         if (pulse_delay >= 500)
         {
-            if ((P2IN & BIT1) == 1)
+            if ((P2IN & BIT2) == 0)
             {
                 press_count++;
                 port_delay = 0;
@@ -113,6 +113,7 @@ __interrupt void TIMER1_B0_ISR(void)
     {
     case 0:
     {
+
         if (up_speed_mode == 1)
         {
             delay_count++;
@@ -125,6 +126,7 @@ __interrupt void TIMER1_B0_ISR(void)
         break;
     case 1:
     {
+        P4OUT |= BIT6;
         stop_time_count = 0;
         time_count++;
         if (time_count >= 24000) //40ns*40000
@@ -134,9 +136,9 @@ __interrupt void TIMER1_B0_ISR(void)
                 //reduce speed
 
                 SensorlessTrapController.SetSpeed -= 100;
-                if (SensorlessTrapController.SetSpeed <= 300)
+                if (SensorlessTrapController.SetSpeed <= 400)
                 {
-                    SensorlessTrapController.SetSpeed = 300;
+                    SensorlessTrapController.SetSpeed = 400;
                 }
             }
 
@@ -145,7 +147,7 @@ __interrupt void TIMER1_B0_ISR(void)
 
         }
         P4OUT |= BIT6;
-        P4OUT &= BIT7;
+        P4OUT &= ~BIT7;
     }
         break;
     case 2:
@@ -163,7 +165,7 @@ __interrupt void TIMER1_B0_ISR(void)
         {
             signal_start = 1;
             //start
-            SensorlessTrapController.SetSpeed = 500;
+            SensorlessTrapController.SetSpeed = 700;
             HostController.EnabledGateDrivers = 0x01;
             HostController.Start_Stop_Motor = 0x00;
         }
@@ -174,8 +176,8 @@ __interrupt void TIMER1_B0_ISR(void)
             if (SensorlessTrapController.SetSpeed
                     >= SensorlessTrapController.MaxDutyCycle)
             {
-                SensorlessTrapController.SetSpeed =
-                        SensorlessTrapController.MaxDutyCycle;
+                SensorlessTrapController.SetSpeed = 900;
+                        //SensorlessTrapController.MaxDutyCycle;
             }
         }
         press_count = 0;
@@ -234,6 +236,7 @@ __interrupt void TIMER1_B0_ISR(void)
   //  if (stop_count >= 1)
     if(((P2IN&BIT1)==0)||((P2IN&BIT2)==1))
     {
+
         stop_time_count++;
         if (stop_time_count >= 24000)
         {
@@ -245,9 +248,10 @@ __interrupt void TIMER1_B0_ISR(void)
            // stop_count = 0;
             press_count = 0;
             P4OUT |= BIT7;
-            P4OUT &= BIT6;
+            P4OUT &= ~BIT6;
         }
     }
+//    TB1CCTL0 &= ~CCIFG;
 }
 
 /* Timer2_A1 interrupt service routine
@@ -451,7 +455,7 @@ __interrupt void TIMER3_B0_ISR(void)
                 (SensorlessTrapController.AccelVelocityInit - (SensorlessTrapController.AccelRate >> 1)) >>
                 3;                                                                                                                       //calculate distance
 
-            if (SensorlessTrapController.CurrentDutyCycle < 350)
+            if (SensorlessTrapController.CurrentDutyCycle < 700)
             {
                 start_tmp++;
                 if (start_tmp == 2)
