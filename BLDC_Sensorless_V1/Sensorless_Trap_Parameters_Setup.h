@@ -27,11 +27,11 @@
 #define ACCEL_VELOCITY_INIT         28000   // {mHz}
 
 //Closed Loop User Parameters
-#define BEMF_THRESHOLD              2000//1960    // BEMF Integration threshold according to calculations of BEMF waveform
+#define BEMF_THRESHOLD              1700//1960    // BEMF Integration threshold according to calculations of BEMF waveform
 #define RAMP_RATE_DELAY             50     // This number controls the acceleration,  duty cycle is updated after ( RAMP_RATE_DELAY * 1000) clock cycles
 #define RAMP_RATE                   1       // This is the change in dutycycle (increment/decrement) for every update
 #define COMMUTATION_BLANK_TIME      5       // How many PWM cycles to blank before sampling the BEMF
-#define PWM_BLANK_COUNTS            10//5       // How many Clock cycles before the center of PWM  the BEMF is sampled
+#define PWM_BLANK_COUNTS            20//5       // How many Clock cycles before the center of PWM  the BEMF is sampled
 
 #define MAX_DUTY_CYCLE              1000        // relative to PWM_PERIOD
 #define MIN_OFF_DUTY                0//250         // relative to PWM_PERIOD

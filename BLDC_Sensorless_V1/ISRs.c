@@ -94,7 +94,7 @@ __interrupt void TIMER1_B0_ISR(void)
     {
 
         pulse_delay++;
-        if (pulse_delay >= 500)
+        if (pulse_delay >= 700)
         {
             if ((P2IN & BIT2) == 0)
             {
@@ -126,28 +126,28 @@ __interrupt void TIMER1_B0_ISR(void)
         break;
     case 1:
     {
-        P4OUT |= BIT6;
+
         stop_time_count = 0;
         time_count++;
         if (time_count >= 24000) //40ns*40000
         {
-            if (signal_start == 1)
+            if ((signal_start == 1) && (up_speed_mode == 0))
             {
                 //reduce speed
 
                 SensorlessTrapController.SetSpeed -= 100;
-                if (SensorlessTrapController.SetSpeed <= 400)
+                if (SensorlessTrapController.SetSpeed <= 500)
                 {
-                    SensorlessTrapController.SetSpeed = 400;
+                    SensorlessTrapController.SetSpeed = 500;
                 }
             }
 
             time_count = 0;
             press_count = 0;
-
+            P4OUT |= BIT6;
+            P4OUT &= ~BIT7;
         }
-        P4OUT |= BIT6;
-        P4OUT &= ~BIT7;
+
     }
         break;
     case 2:
@@ -169,15 +169,20 @@ __interrupt void TIMER1_B0_ISR(void)
             HostController.EnabledGateDrivers = 0x01;
             HostController.Start_Stop_Motor = 0x00;
         }
-        else
+//        else
+        if ( ApplicationStatus.currentstate == MOTOR_RUN && up_speed_mode == 0)
         {
             //up speed
-            SensorlessTrapController.SetSpeed += 100;
-            if (SensorlessTrapController.SetSpeed
-                    >= SensorlessTrapController.MaxDutyCycle)
+//            SensorlessTrapController.SetSpeed += 100;
+//            if (SensorlessTrapController.SetSpeed
+//                    >= SensorlessTrapController.MaxDutyCycle)
+//            {
+//                SensorlessTrapController.SetSpeed = 900;
+//                        //SensorlessTrapController.MaxDutyCycle;
+//            }
+            if (SensorlessTrapController.SetSpeed <= 810) //(SensorlessTrapController.MaxDutyCycle - 100))
             {
-                SensorlessTrapController.SetSpeed = 900;
-                        //SensorlessTrapController.MaxDutyCycle;
+                SensorlessTrapController.SetSpeed += 100;
             }
         }
         press_count = 0;
@@ -249,6 +254,8 @@ __interrupt void TIMER1_B0_ISR(void)
             press_count = 0;
             P4OUT |= BIT7;
             P4OUT &= ~BIT6;
+            if (ApplicationStatus.currentstate > 2)
+                PMMCTL0 |= PMMSWPOR;
         }
     }
 //    TB1CCTL0 &= ~CCIFG;
